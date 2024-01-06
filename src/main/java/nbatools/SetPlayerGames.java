@@ -6,6 +6,7 @@ import java.net.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.util.Map;
 
 import org.json.JSONObject;
 import org.json.JSONArray;
@@ -35,7 +36,10 @@ public class SetPlayerGames implements Runnable{
 
             JSONArray roster = jo.getJSONObject("game").getJSONObject("homeTeam").getJSONArray("players");
 
-            String connectionString = "jdbc:sqlserver://donnienba.database.windows.net:1433;database=nbastats;user=nbadmin;password=FireworkStand11!;encrypt=true;hostNameInCertificate=*.database.windows.net;loginTimeout=30;";
+            Map<String, String> env = System.getenv();
+
+            String connectionString = env.get("DBSTRING");
+
             try {
                 Connection conn = DriverManager.getConnection(connectionString);
 

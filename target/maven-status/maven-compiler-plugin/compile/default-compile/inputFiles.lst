@@ -1,3 +1,4 @@
-/home/donnie/producerFactory/src/main/java/nbatools/App.java
-/home/donnie/producerFactory/src/main/java/nbatools/GetGameIds.java
-/home/donnie/producerFactory/src/main/java/nbatools/StatsCollector.java
+/home/donnie/StatsCollector/src/main/java/nbatools/GetGameIds.java
+/home/donnie/StatsCollector/src/main/java/nbatools/SetPlayerGames.java
+/home/donnie/StatsCollector/src/main/java/nbatools/App.java
+/home/donnie/StatsCollector/src/main/java/nbatools/StatsCollector.java

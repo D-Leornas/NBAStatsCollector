@@ -7,9 +7,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONArray;
 
 public class SetPlayerGames implements Runnable{
 
@@ -26,33 +25,36 @@ public class SetPlayerGames implements Runnable{
             connection.setRequestProperty("accept", "application/json");
 
             BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            Object obj = new JSONParser().parse(br);
-            JSONObject jo = (JSONObject) obj;
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line+"\n");
+            }
+            br.close();
+            JSONObject jo = new JSONObject(sb.toString());
 
-            JSONArray roster = (JSONArray) ((JSONObject) ((JSONObject) jo.get("game")).get("homeTeam")).get("players");
+            JSONArray roster = jo.getJSONObject("game").getJSONObject("homeTeam").getJSONArray("players");
 
             String connectionString = "jdbc:sqlserver://donnienba.database.windows.net:1433;database=nbastats;user=nbadmin;password=FireworkStand11!;encrypt=true;hostNameInCertificate=*.database.windows.net;loginTimeout=30;";
             try {
                 Connection conn = DriverManager.getConnection(connectionString);
 
-                roster = (JSONArray) ((JSONObject) ((JSONObject) jo.get("game")).get("homeTeam")).get("players");
-
                 for (Object r : roster) {
                     JSONObject t = (JSONObject) r;
                     String id = t.get("personId").toString();
-                    System.out.println(id);
+                    //System.out.println(id);
                     PreparedStatement statement = conn.prepareStatement("INSERT INTO nbastats.[2022-23].[player_game_stats] (player_id, game_id) VALUES (?, ?);");
                     statement.setInt(1, Integer.parseInt(id));
                     statement.setInt(2, Integer.parseInt(gameId));
                     statement.executeUpdate();
                 }
 
-                roster = (JSONArray) ((JSONObject) ((JSONObject) jo.get("game")).get("awayTeam")).get("players");
+                roster = jo.getJSONObject("game").getJSONObject("awayTeam").getJSONArray("players");
 
                 for (Object r : roster) {
                     JSONObject t = (JSONObject) r;
                     String id = t.get("personId").toString();
-                    System.out.println(id);
+                    //System.out.println(id);
                     PreparedStatement statement = conn.prepareStatement("INSERT INTO nbastats.[2022-23].[player_game_stats] (player_id, game_id) VALUES (?, ?);");
                     statement.setInt(1, Integer.parseInt(id));
                     statement.setInt(2, Integer.parseInt(gameId));
@@ -60,6 +62,7 @@ public class SetPlayerGames implements Runnable{
                 }
 
                 conn.close();
+                System.out.println("Player game rows for game " + gameId + " have been set");
 
             } catch (Exception e) {
                 System.out.print(e.toString());

@@ -47,7 +47,7 @@ public class SetPlayerGames implements Runnable{
                     JSONObject t = (JSONObject) r;
                     String id = t.get("personId").toString();
                     //System.out.println(id);
-                    PreparedStatement statement = conn.prepareStatement("INSERT INTO nbastats.[2022-23].[player_game_stats] (player_id, game_id) VALUES (?, ?);");
+                    PreparedStatement statement = conn.prepareStatement("INSERT INTO nbastats.[player_game_stats] (player_id, game_id) VALUES (?, ?);");
                     statement.setInt(1, Integer.parseInt(id));
                     statement.setInt(2, Integer.parseInt(gameId));
                     statement.executeUpdate();
@@ -59,7 +59,7 @@ public class SetPlayerGames implements Runnable{
                     JSONObject t = (JSONObject) r;
                     String id = t.get("personId").toString();
                     //System.out.println(id);
-                    PreparedStatement statement = conn.prepareStatement("INSERT INTO nbastats.[2022-23].[player_game_stats] (player_id, game_id) VALUES (?, ?);");
+                    PreparedStatement statement = conn.prepareStatement("INSERT INTO nbastats.[player_game_stats] (player_id, game_id) VALUES (?, ?);");
                     statement.setInt(1, Integer.parseInt(id));
                     statement.setInt(2, Integer.parseInt(gameId));
                     statement.executeUpdate();

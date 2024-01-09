@@ -53,16 +53,23 @@ public class StatsCollector implements Runnable{
                     
                     JSONObject game = jo.getJSONObject("game");
                     JSONArray actions = game.getJSONArray("actions");
+                    String message = "{\"actions\":[";
 
                     if (actions.length() > actionsLength) {
                         for (int i = actionsLength; i < actions.length(); i++) {
                             //Gives all the next actions
                             //System.out.println(actions.get(i));
                             out.write(actions.get(i).toString() + ",");
+                            message += actions.get(i).toString() + ",";
                             System.out.println(actions.get(i).toString());
                         }
                         actionsLength = actions.length();
                     }
+
+                    message = message.substring(0, message.length()-1);
+                    message += "]}";
+                    Runnable r = new StatsProcessor(gameId, message);
+                    new Thread(r).start();
 
                     if ((actions.getJSONObject(actions.length()-1)).get("description").toString().equals("Game End")) {
                         break;

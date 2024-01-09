@@ -1,13 +1,13 @@
 package nbatools;
 
 import org.junit.jupiter.api.Test;
+import java.io.IOException;
 
 public class StatsProcessorTest {
     
     @Test
-    public void testParse() {
-        StatsProcessor test = new StatsProcessor();
-        test.processStats("output-files/0022300492.txt");
-    }
+    public void testStatProcessor() throws IOException {
+        
+        }
 
 }

@@ -7,37 +7,36 @@ import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
+import java.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-public class StatsProcessor {
+public class StatsProcessor implements Runnable{
     
-    public void processStats(String fileName) {
+    private String gameId;
+    private String actions;
+
+    StatsProcessor(String gameId, String actions) {
+        this.gameId = gameId;
+        this.actions = actions;
+    }
+
+    public void run() {
 
         try {
-            FileReader in = new FileReader(fileName);
-            BufferedReader br = new BufferedReader(in);
-            StringBuilder sb = new StringBuilder();
-            String line = null;
-            while ((line = br.readLine()) != null) {
-                sb.append(line+"\n");
-            }
-            sb.deleteCharAt(sb.length() - 1);
-            sb.deleteCharAt(sb.length() - 1);
-            sb.append("]}");
-            sb.insert(0, "{\"actions\":");
-            br.close();
-            String content = sb.toString();
 
-            JSONObject jo = new JSONObject(content);
+            JSONObject jo = new JSONObject(actions);
             JSONArray actions = jo.getJSONArray("actions");
 
             for (Object temp : actions) {
                 JSONObject action = (JSONObject) temp;
-                System.out.println(action.get("actionType"));
+                Runnable r = new StatPutter(action, gameId);
+                Thread t = new Thread(r);
+                t.start();
             }
+
 
         } catch (Exception e) {
             e.printStackTrace();

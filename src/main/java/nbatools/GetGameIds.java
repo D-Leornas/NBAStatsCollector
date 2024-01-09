@@ -8,12 +8,13 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 
 public class GetGameIds {
-    
+
     public void start() throws IOException{
 
         URL url = URI.create("https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json").toURL();
 
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
 
         connection.setRequestProperty("accept", "application/json");
 
@@ -43,6 +44,14 @@ public class GetGameIds {
         }
 
         System.out.println("All statcollector threads set");
+    }
+
+    public void test(String testGameId) throws IOException{
+
+        StatsCollector r = new StatsCollector(testGameId);
+        r.run(true);
+
+        System.out.println("test statcollector thread set");
     }
     
 }

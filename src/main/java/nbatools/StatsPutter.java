@@ -7,13 +7,13 @@ import java.sql.PreparedStatement;
 
 import org.json.JSONObject;
 
-public class StatPutter implements Runnable{
+public class StatsPutter implements Runnable{
 
     private String actionType;
     private JSONObject message;
     private String gameId;
     
-    StatPutter(JSONObject message, String gameId) {
+    StatsPutter(JSONObject message, String gameId) {
         this.actionType = message.get("actionType").toString();
         this.message = message;
         this.gameId = gameId;
@@ -39,7 +39,7 @@ public class StatPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET fgp = fgm/fga WHERE player_id = ? AND game_id = ?;");
+                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET fgp = CAST(fgm AS float)/CAST(fga AS float) WHERE player_id = ? AND game_id = ?;");
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
@@ -48,7 +48,7 @@ public class StatPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET fgp = fgm/fga WHERE player_id = ? AND game_id = ?;");
+                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET fgp = CAST(fgm AS float)/CAST(fga AS float) WHERE player_id = ? AND game_id = ?;");
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
@@ -70,7 +70,7 @@ public class StatPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET fgp = fgm/fga, [3pp] = [3pm]/[3pa] WHERE player_id = ? AND game_id = ?;");
+                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET fgp = CAST(fgm AS float)/CAST(fga AS float), [3pp] = CAST([3pm] AS float)/CAST([3pa] AS float) WHERE player_id = ? AND game_id = ?;");
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
@@ -79,7 +79,7 @@ public class StatPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET fgp = fgm/fga, [3pp] = [3pm]/[3pa] WHERE player_id = ? AND game_id = ?;");
+                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET fgp = CAST(fgm AS float)/CAST(fga AS float), [3pp] = CAST([3pm] AS float)/CAST([3pa] AS float) WHERE player_id = ? AND game_id = ?;");
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();

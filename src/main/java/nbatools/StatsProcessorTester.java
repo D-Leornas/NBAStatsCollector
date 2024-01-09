@@ -15,12 +15,12 @@ import java.util.concurrent.TimeUnit;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class StatsProcessor implements Runnable{
+public class StatsProcessorTester implements Runnable{
     
     private String gameId;
     private String actions;
 
-    StatsProcessor(String gameId, String actions) {
+    StatsProcessorTester(String gameId, String actions) {
         this.gameId = gameId;
         this.actions = actions;
     }
@@ -35,12 +35,12 @@ public class StatsProcessor implements Runnable{
 
             for (Object temp : actions) {
                 JSONObject action = (JSONObject) temp;
-                Runnable r = new StatsPutter(action, gameId);
+                Runnable r = new StatsPutterTester(action, gameId);
                 es.execute(r);
             }
 
             es.shutdown();
-            es.awaitTermination(5, TimeUnit.MINUTES);
+            System.out.println("done waiting: " + String.valueOf(es.awaitTermination(5, TimeUnit.MINUTES)));
 
 
         } catch (Exception e) {

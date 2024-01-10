@@ -1,2 +1,2 @@
 # StatsCollector
-Collects data straight from Nba.stats.com's REST API, parse the messages, and store the statistics into a database in real time
+Collects data straight from Nba.stats.com's REST API, parses the messages, and stores the statistics into a database in real time.

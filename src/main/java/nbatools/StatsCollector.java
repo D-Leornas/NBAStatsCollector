@@ -94,7 +94,7 @@ public class StatsCollector implements Runnable{
                     TimeUnit.SECONDS.sleep(30);
 
                 } catch (Exception e) {
-                    System.out.println(e.toString());
+                    e.printStackTrace();
                     System.out.println("============================================================================================================================================================================================================================");
                     try {
                         TimeUnit.SECONDS.sleep(60);

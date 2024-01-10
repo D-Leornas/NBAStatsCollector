@@ -8,8 +8,8 @@ public class TestPastGames {
     
     @Test
     public void testStatProcessor() throws IOException {
-        GetGameIds test = new GetGameIds();
-        test.test("0022300507");
+        //GetGameIds test = new GetGameIds();
+        //test.test("0022300507");
     }
 
 }

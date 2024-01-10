@@ -145,7 +145,7 @@ public class StatsPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET ftp = ftm/fta WHERE player_id = ? AND game_id = ?;");
+                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET ftp = CAST(ftm AS float)/CAST(fta AS float) WHERE player_id = ? AND game_id = ?;");
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
@@ -154,7 +154,7 @@ public class StatsPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET ftp = ftm/fta WHERE player_id = ? AND game_id = ?;");
+                        statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET ftp = CAST(ftm AS float)/CAST(fta AS float) WHERE player_id = ? AND game_id = ?;");
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();

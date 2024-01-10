@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.time.LocalDateTime;  
 import java.time.format.DateTimeFormatter;
 
@@ -24,70 +25,70 @@ public class SetPlayerGames implements Runnable{
     }
 
     public void run() {
-        try {
-            URL rosterUrl = URI.create("https://cdn.nba.com/static/json/liveData/boxscore/boxscore_" + gameId + ".json").toURL();
-            HttpURLConnection connection = (HttpURLConnection) rosterUrl.openConnection();
-            connection.setRequestProperty("accept", "application/json");
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line+"\n");
-            }
-            br.close();
-
-            JSONObject jo = new JSONObject(sb.toString());
-            JSONArray roster = jo.getJSONObject("game").getJSONObject("homeTeam").getJSONArray("players");
-            String homeId = jo.getJSONObject("game").get("homeTeamId").toString();
-            String awayId = jo.getJSONObject("game").get("awayTeamId").toString();
-
-            Map<String, String> env = System.getenv();
-
-            String connectionString = env.get("DBSTRING");
-
+        while (true) {
             try {
+                URL rosterUrl = URI.create("https://cdn.nba.com/static/json/liveData/boxscore/boxscore_" + gameId + ".json").toURL();
+                HttpURLConnection connection = (HttpURLConnection) rosterUrl.openConnection();
+                connection.setRequestProperty("accept", "application/json");
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line+"\n");
+                }
+                br.close();
+
+                JSONObject jo = new JSONObject(sb.toString());
+                JSONArray roster = jo.getJSONObject("game").getJSONObject("homeTeam").getJSONArray("players");
+                String homeId = jo.getJSONObject("game").getJSONObject("homeTeam").get("teamId").toString();
+                String awayId = jo.getJSONObject("game").getJSONObject("awayTeam").get("teamId").toString();
+
+                Map<String, String> env = System.getenv();
+
+                String connectionString = env.get("DBSTRING");
                 Connection conn = DriverManager.getConnection(connectionString);
-
-                PreparedStatement statement = conn.prepareStatement("INSERT INTO nbastats.games (game_id, game_date, home_team_id, away_team_id) VALUES (?, ?, ?, ?);");
-                statement.setString(1, gameId);
-                statement.setString(2, date);
-                statement.setString(3, homeId);
-                statement.setString(4, awayId);
-                statement.executeUpdate();
-
+                PreparedStatement gameStatement = conn.prepareStatement("INSERT INTO nbastats.games (game_id, game_date, home_team_id, away_team_id) VALUES (?, ?, ?, ?);");
+                gameStatement.setString(1, gameId);
+                gameStatement.setString(2, date);
+                gameStatement.setString(3, homeId);
+                gameStatement.setString(4, awayId);
+                gameStatement.executeUpdate();
+                TimeUnit.SECONDS.sleep(1);
                 for (Object r : roster) {
                     JSONObject t = (JSONObject) r;
                     String id = t.get("personId").toString();
                     //System.out.println(id);
-                    statement = conn.prepareStatement("INSERT INTO nbastats.[player_game_stats] (player_id, game_id) VALUES (?, ?);");
+                    PreparedStatement statement = conn.prepareStatement("INSERT INTO nbastats.[player_game_stats] (player_id, game_id, team_id) VALUES (?, ?, ?);");
                     statement.setString(1, id);
                     statement.setString(2, gameId);
                     statement.setString(3, homeId);
                     statement.executeUpdate();
                 }
-
                 roster = jo.getJSONObject("game").getJSONObject("awayTeam").getJSONArray("players");
-
                 for (Object r : roster) {
                     JSONObject t = (JSONObject) r;
                     String id = t.get("personId").toString();
                     //System.out.println(id);
-                    statement = conn.prepareStatement("INSERT INTO nbastats.[player_game_stats] (player_id, game_id, team_id) VALUES (?, ?, ?);");
+                    PreparedStatement statement = conn.prepareStatement("INSERT INTO nbastats.[player_game_stats] (player_id, game_id, team_id) VALUES (?, ?, ?);");
                     statement.setString(1, id);
                     statement.setString(2, gameId);
                     statement.setString(3, awayId);
+                    statement.executeUpdate();
                 }
-
                 conn.close();
-                System.out.println("Player game rows for game " + gameId + " have been set");
+                System.out.println("Player game rows and game row for game " + gameId + " have been set");
+                break;
 
             } catch (Exception e) {
-                System.out.print(e.toString());
+                e.printStackTrace();
+                System.out.println("============================================================================================================================================================================================================================");
+                try {
+                    TimeUnit.SECONDS.sleep(60);
+                } catch (InterruptedException e1) {
+                    System.out.println("Sleep interrupted");
+                }
             }
-
-        } catch (Exception e) {
-            System.out.println(e.toString());
         }
     }
 

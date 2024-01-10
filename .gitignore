@@ -1,4 +1,4 @@
 .env
-.vscode
+.vscode/
 log.txt
 output-files/

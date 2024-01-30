@@ -29,7 +29,7 @@ public class StatsProcessor implements Runnable{
                 JSONObject action = (JSONObject) temp;
                 Runnable r = new StatsPutter(action, gameId);
                 es.execute(r);
-                TimeUnit.MILLISECONDS.sleep(200);
+                TimeUnit.MILLISECONDS.sleep(50);
             }
 
             es.shutdown();

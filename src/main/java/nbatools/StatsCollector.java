@@ -2,6 +2,7 @@ package nbatools;
 
 import java.net.*;
 import java.io.FileWriter;
+import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import org.json.JSONArray;
@@ -9,11 +10,14 @@ import org.json.JSONObject;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.HashSet;
+import java.util.Set;
 
 public class StatsCollector implements Runnable{
     
     private String gameId;
-    private int actionsLength = 0;
+    private int index = 0;
+    private Set<Object> uniques = new HashSet<>();
 
     public StatsCollector(String gameId) {
         this.gameId = gameId;
@@ -36,7 +40,7 @@ public class StatsCollector implements Runnable{
         try {
 
             out = new FileWriter("output-files/" + gameId + ".txt");
-            out.write("[\n");
+            out.write("{\"actions\":[\n");
 
             ExecutorService es = Executors.newCachedThreadPool();
             while (true) {
@@ -59,16 +63,14 @@ public class StatsCollector implements Runnable{
                     JSONObject game = jo.getJSONObject("game");
                     JSONArray actions = game.getJSONArray("actions");
                     String message = "{\"actions\":[";
-
-                    if (actions.length() > actionsLength) {
-                        for (int i = actionsLength; i < actions.length(); i++) {
+                    
+                    for (int i = 0; i < actions.length(); i++) {
+                        if (uniques.add(actions.getJSONObject(i).get("possession").toString() + actions.getJSONObject(i).get("actionNumber").toString())) {    
                             //Gives all the next actions
-                            System.out.println(actions.get(i));
                             out.write(actions.get(i).toString() + ",");
                             message += actions.get(i).toString() + ",";
-                            System.out.println(actions.get(i).toString());
+                            //System.out.println(actions.get(i).toString());
                         }
-                        actionsLength = actions.length();
                     }
 
                     message = message.substring(0, message.length()-1);
@@ -78,20 +80,27 @@ public class StatsCollector implements Runnable{
 
 
                     if ((actions.getJSONObject(actions.length()-1)).get("description").toString().equals("Game End")) {
+                        FileWriter finalOut = new FileWriter("output-files/" + gameId + "_final.txt");
+                        finalOut.write(sb.toString());
+                        finalOut.close();
                         break;
                     } else if (actions.getJSONObject(actions.length()-1).get("actionType").toString().equals("period")) {
                         if (actions.getJSONObject(actions.length()-1).get("subType").toString().equals("end")) {
                             if (Integer.parseInt(actions.getJSONObject(actions.length()-1).get("period").toString()) >= 4) {
                                 int homeScore = Integer.parseInt(actions.getJSONObject(actions.length()-1).get("scoreHome").toString());
                                 int awayScore = Integer.parseInt(actions.getJSONObject(actions.length()-1).get("scoreAway").toString());
-                                if (homeScore != awayScore)
+                                if (homeScore != awayScore) {
+                                    FileWriter finalOut = new FileWriter("output-files/" + gameId + "_final.txt");
+                                    finalOut.write(sb.toString());
+                                    finalOut.close();
                                     break;
+                                }
                             }
                         }
                     }
 
                     System.out.println("============================================================================================================================================================================================================================");
-                    TimeUnit.SECONDS.sleep(30);
+                    TimeUnit.SECONDS.sleep(10);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -160,15 +169,15 @@ public class StatsCollector implements Runnable{
                     JSONArray actions = game.getJSONArray("actions");
                     String message = "{\"actions\":[";
 
-                    if (actions.length() > actionsLength) {
-                        for (int i = actionsLength; i < actions.length(); i++) {
+                    if (actions.length() > index) {
+                        for (int i = index; i < actions.length(); i++) {
                             //Gives all the next actions
                             //System.out.println(actions.get(i));
                             out.write(actions.get(i).toString() + ",");
                             message += actions.get(i).toString() + ",";
                             //System.out.println(actions.get(i).toString());
                         }
-                        actionsLength = actions.length();
+                        index = actions.length();
                     }
 
                     message = message.substring(0, message.length()-1);
@@ -214,5 +223,93 @@ public class StatsCollector implements Runnable{
         } catch (Exception e) {
             System.out.println(e.toString());
         }              
+    }
+
+    public void run(FileReader in) {
+        SetPlayerGames setUpRows = new SetPlayerGames(gameId);
+        setUpRows.run(true);
+
+        FileWriter out;
+
+        try {
+
+            out = new FileWriter("output-files/" + gameId + "-test.txt");
+            out.write("[\n");
+
+            ExecutorService es = Executors.newCachedThreadPool();
+            while (true) {
+                try {
+                    
+                    BufferedReader br = new BufferedReader(in);
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        sb.append(line+"\n");
+                    }
+                    br.close();
+
+                    JSONObject jo = new JSONObject(sb.toString());
+                    
+                    JSONArray actions = jo.getJSONArray("actions");
+                    String message = "{\"actions\":[";
+                    
+                    if (actions.length() > index) {
+                        for (int i = index; i < actions.length(); i++) {
+                            if (uniques.add(actions.get(i))) {    
+                                //Gives all the next actions
+                                out.write(actions.get(i).toString() + ",");
+                                message += actions.get(i).toString() + ",";
+                                //System.out.println(actions.get(i).toString());
+                            } else {
+                                System.out.println("Duplicate JSONObject");
+                            }
+
+                        }
+                        index = actions.length();
+                    }
+
+                    message = message.substring(0, message.length()-1);
+                    message += "]}";
+                    Runnable r = new StatsProcessor(gameId, message);
+                    es.execute(r);
+
+
+                    if ((actions.getJSONObject(actions.length()-1)).get("description").toString().equals("Game End")) {
+                        break;
+                    } else if (actions.getJSONObject(actions.length()-1).get("actionType").toString().equals("period")) {
+                        if (actions.getJSONObject(actions.length()-1).get("subType").toString().equals("end")) {
+                            if (Integer.parseInt(actions.getJSONObject(actions.length()-1).get("period").toString()) >= 4) {
+                                int homeScore = Integer.parseInt(actions.getJSONObject(actions.length()-1).get("scoreHome").toString());
+                                int awayScore = Integer.parseInt(actions.getJSONObject(actions.length()-1).get("scoreAway").toString());
+                                if (homeScore != awayScore)
+                                    break;
+                            }
+                        }
+                    }
+
+                    System.out.println("============================================================================================================================================================================================================================");
+                    TimeUnit.SECONDS.sleep(30);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("============================================================================================================================================================================================================================");
+                    try {
+                        TimeUnit.SECONDS.sleep(60);
+                    } catch (InterruptedException e1) {
+                        System.out.println("Sleep interrupted");
+                    }
+                }
+            }
+
+            es.shutdown();
+            es.awaitTermination(5, TimeUnit.MINUTES);
+
+            out.write("]");
+            out.close();
+            System.out.println("Game " + gameId + " has concluded");
+
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
     }
 }

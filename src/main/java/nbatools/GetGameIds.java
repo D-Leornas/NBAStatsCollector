@@ -1,6 +1,7 @@
 package nbatools;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
@@ -50,6 +51,14 @@ public class GetGameIds {
 
         StatsCollector r = new StatsCollector(testGameId);
         r.run(true);
+
+        System.out.println("test statcollector thread set");
+    }
+
+    public void test(String testGameId, FileReader in) throws IOException{
+
+        StatsCollector r = new StatsCollector(testGameId);
+        r.run(in);
 
         System.out.println("test statcollector thread set");
     }

@@ -30,10 +30,12 @@ public class StatsPutter implements Runnable{
         while (true) {
             try {
                 Connection conn = DriverManager.getConnection(connectionString);
-                String pid = null;
+                String pid;
                 PreparedStatement statement;
 
-                if (actionType == "2pt") {
+                //System.out.println(actionType);
+
+                if (actionType.equals("2pt")) {
                     String apid = null;
                     pid = message.get("personId").toString();
                     if (message.get("shotResult").toString().equals("Missed")) {
@@ -45,7 +47,7 @@ public class StatsPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        //System.out.println(pid + " 2PT miss");
+                        System.out.println(pid + " 2PT miss");
                     } else {
                         statement = conn.prepareStatement("UPDATE nbastats.[player_game_stats] SET fga = fga + 1, fgm = fgm + 1, pts = pts + 2 WHERE player_id = ? AND game_id = ?;");
                         statement.setInt(1, Integer.parseInt(pid));
@@ -55,28 +57,29 @@ public class StatsPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        //System.out.println(pid + " 2PT make");
+                        System.out.println(pid + " 2PT make");
                         if (message.has("assistPersonId")) {
                             apid = message.get("assistPersonId").toString();
                             statement = conn.prepareStatement("UPDATE nbastats.player_game_stats SET ast = ast + 1 WHERE player_id = ? AND game_id = ?;");
                             statement.setInt(1, Integer.parseInt(apid));
                             statement.setInt(2, Integer.parseInt(gameId));
                             statement.executeUpdate();
-                            //System.out.println(apid + " assist");
+                            System.out.println(apid + " assist");
                         }
                     }
-                    statement = conn.prepareStatement("SELECT pts FROM nbastats.player_game_stats WHERE player_id = ?;");
+                    statement = conn.prepareStatement("SELECT p.pts FROM nbastats.player_game_stats AS p WHERE player_id = ?;");
                     statement.setInt(1, Integer.parseInt(pid));
                     ResultSet points = statement.executeQuery();
-                    ImportantStatChecker.CheckPoints(pid, gameId, points.getInt("pts"));
+                    
+                    if (points.next()) ImportantStatChecker.CheckPoints(pid, gameId, points.getInt("pts"));
                     
                     if (apid != null) {
-                        statement = conn.prepareStatement("SELECT ast FROM nbastats.player_game_stats WHERE player_id = ?;");
+                        statement = conn.prepareStatement("SELECT p.ast FROM nbastats.player_game_stats AS p WHERE player_id = ?;");
                         statement.setInt(1, Integer.parseInt(apid));
                         ResultSet assists = statement.executeQuery();
-                        ImportantStatChecker.CheckAssists(apid, gameId, assists.getInt("ast"));
+                        if (assists.next()) ImportantStatChecker.CheckAssists(apid, gameId, assists.getInt("ast"));
                     }
-                } else if (actionType == "3pt") {
+                } else if (actionType.equals("3pt")) {
                     pid = message.get("personId").toString();
                     String apid = null;
                     if (message.get("shotResult").toString().equals("Missed")) {
@@ -88,7 +91,7 @@ public class StatsPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        //System.out.println(pid + " 3PT miss");
+                        System.out.println(pid + " 3PT miss");
                     } else {
                         statement = conn.prepareStatement("UPDATE nbastats.[player_game_stats] SET fga = fga + 1, fgm = fgm + 1, [3pa] = [3pa] + 1, [3pm] = [3pm] + 1, pts = pts + 3 WHERE player_id = ? AND game_id = ?;");
                         statement.setInt(1, Integer.parseInt(pid));
@@ -98,7 +101,7 @@ public class StatsPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        //System.out.println(pid + " 2PT make");
+                        System.out.println(pid + " 2PT make");
 
                         if (message.has("assistPersonId")) {
                             apid = message.get("assistPersonId").toString();
@@ -106,24 +109,24 @@ public class StatsPutter implements Runnable{
                             statement.setInt(1, Integer.parseInt(apid));
                             statement.setInt(2, Integer.parseInt(gameId));
                             statement.executeUpdate();
-                            //System.out.println(apid + " assist");
+                            System.out.println(apid + " assist");
                         }
 
                     }
                         
-                    statement = conn.prepareStatement("SELECT pts FROM nbastats.player_game_stats WHERE player_id = ?;");
+                    statement = conn.prepareStatement("SELECT p.pts FROM nbastats.player_game_stats AS p WHERE player_id = ?;");
                     statement.setInt(1, Integer.parseInt(pid));
                     ResultSet points = statement.executeQuery();
-                    ImportantStatChecker.CheckPoints(pid, gameId, points.getInt("pts"));
+                    if (points.next()) ImportantStatChecker.CheckPoints(pid, gameId, points.getInt("pts"));
                     
                     if (apid != null) {
-                        statement = conn.prepareStatement("SELECT ast FROM nbastats.player_game_stats WHERE player_id = ?;");
+                        statement = conn.prepareStatement("SELECT p.ast FROM nbastats.player_game_stats AS p WHERE player_id = ?;");
                         statement.setInt(1, Integer.parseInt(apid));
                         ResultSet assists = statement.executeQuery();
-                        ImportantStatChecker.CheckAssists(apid, gameId, assists.getInt("ast"));
+                        if (assists.next())ImportantStatChecker.CheckAssists(apid, gameId, assists.getInt("ast"));
                     }
                     
-                } else if (actionType == "rebound") {
+                } else if (actionType.equals("rebound")) {
                     if (message.get("description").toString().contains("TEAM"))
                         break;
                     
@@ -134,50 +137,53 @@ public class StatsPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        //System.out.println(pid + " dreb");
+                        System.out.println(pid + " dreb");
                     } else {
                         statement = conn.prepareStatement("UPDATE nbastats.[player_game_stats] SET reb = reb + 1, oreb = oreb + 1 WHERE player_id = ? AND game_id = ?;");
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        //System.out.println(pid + " oreb");
+                        System.out.println(pid + " oreb");
                     }
 
-                    statement = conn.prepareStatement("SELECT reb FROM nbastats.player_game_stats WHERE player_id = ?;");
+                    statement = conn.prepareStatement("SELECT p.reb FROM nbastats.player_game_stats AS p WHERE player_id = ?;");
                     statement.setInt(1, Integer.parseInt(pid));
                     ResultSet rebounds = statement.executeQuery();
-                    ImportantStatChecker.CheckRebounds(pid, gameId, rebounds.getInt("reb"));
+                    if (rebounds.next()) ImportantStatChecker.CheckRebounds(pid, gameId, rebounds.getInt("reb"));
 
-                } else if (actionType == "steal") {
+                } else if (actionType.equals("steal")) {
                     pid = message.get("personId").toString();
                     statement = conn.prepareStatement("UPDATE nbastats.[player_game_stats] SET stl = stl + 1 WHERE player_id = ? AND game_id = ?;");
                     statement.setInt(1, Integer.parseInt(pid));
                     statement.setInt(2, Integer.parseInt(gameId));
                     statement.executeUpdate();
-                    //System.out.println(pid + " steal");
-                    statement = conn.prepareStatement("SELECT stl FROM nbastats.player_game_stats WHERE player_id = ?;");
+                    System.out.println(pid + " steal");
+                    statement = conn.prepareStatement("SELECT p.stl FROM nbastats.player_game_stats AS p WHERE player_id = ?;");
                     statement.setInt(1, Integer.parseInt(pid));
                     ResultSet steals = statement.executeQuery();
-                    ImportantStatChecker.CheckSteals(pid, gameId, steals.getInt("stl"));
-                } else if (actionType == "block") {
+                    if (steals.next()) ImportantStatChecker.CheckSteals(pid, gameId, steals.getInt("stl"));
+
+                } else if (actionType.equals("block")) {
                     pid = message.get("personId").toString();
                     statement = conn.prepareStatement("UPDATE nbastats.[player_game_stats] SET blk = blk + 1 WHERE player_id = ? AND game_id = ?;");
                     statement.setInt(1, Integer.parseInt(pid));
                     statement.setInt(2, Integer.parseInt(gameId));
                     statement.executeUpdate();
-                    //System.out.println(pid + " block");
-                    statement = conn.prepareStatement("SELECT blk FROM nbastats.player_game_stats WHERE player_id = ?;");
+                    System.out.println(pid + " block");
+                    statement = conn.prepareStatement("SELECT p.blk FROM nbastats.player_game_stats AS p WHERE player_id = ?;");
                     statement.setInt(1, Integer.parseInt(pid));
                     ResultSet blocks = statement.executeQuery();
-                    ImportantStatChecker.CheckBlocks(pid, gameId, blocks.getInt("blk"));
-                } else if (actionType == "foul") {
+                    if (blocks.next()) ImportantStatChecker.CheckBlocks(pid, gameId, blocks.getInt("blk"));
+
+                } else if (actionType.equals("foul")) {
                     pid = message.get("personId").toString();
                     statement = conn.prepareStatement("UPDATE nbastats.[player_game_stats] SET pf = pf + 1 WHERE player_id = ? AND game_id = ?;");
                     statement.setInt(1, Integer.parseInt(pid));
                     statement.setInt(2, Integer.parseInt(gameId));
                     statement.executeUpdate();
-                    //System.out.println(pid + " foul");
-                } else if (actionType == "freethrow") {
+                    System.out.println(pid + " foul");
+
+                } else if (actionType.equals("freethrow")) {
                     pid = message.get("personId").toString();
                     if (message.get("shotResult").toString().equals("Missed")) {
                         statement = conn.prepareStatement("UPDATE nbastats.[player_game_stats] SET fta = fta + 1 WHERE player_id = ? AND game_id = ?;");
@@ -188,7 +194,7 @@ public class StatsPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        //System.out.println(pid + " FT miss");
+                        System.out.println(pid + " FT miss");
                     } else {
                         statement = conn.prepareStatement("UPDATE nbastats.[player_game_stats] SET fta = fta + 1, ftm = ftm + 1, pts = pts + 1 WHERE player_id = ? AND game_id = ?;");
                         statement.setInt(1, Integer.parseInt(pid));
@@ -198,15 +204,16 @@ public class StatsPutter implements Runnable{
                         statement.setInt(1, Integer.parseInt(pid));
                         statement.setInt(2, Integer.parseInt(gameId));
                         statement.executeUpdate();
-                        //System.out.println(pid + " FT make");
+                        System.out.println(pid + " FT make");
                     }
-                } else if (actionType == "turnover") {
+                    
+                } else if (actionType.equals("turnover")) {
                     pid = message.get("personId").toString();
                     statement = conn.prepareStatement("UPDATE nbastats.[player_game_stats] SET tov = tov + 1 WHERE player_id = ? AND game_id = ?;");
                     statement.setInt(1, Integer.parseInt(pid));
                     statement.setInt(2, Integer.parseInt(gameId));
                     statement.executeUpdate();
-                    //System.out.println(pid + " turnover");
+                    System.out.println(pid + " turnover");
                 }
 
                 conn.close();

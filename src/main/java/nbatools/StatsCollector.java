@@ -10,14 +10,14 @@ import org.json.JSONObject;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 public class StatsCollector implements Runnable{
     
     private String gameId;
     private int index = 0;
-    private Set<Object> uniques = new HashSet<>();
+    private Map<String, String> uniques = new HashMap<String, String>();
 
     public StatsCollector(String gameId) {
         this.gameId = gameId;
@@ -39,8 +39,8 @@ public class StatsCollector implements Runnable{
 
         try {
 
+            // out file needs to be taken from the hash map
             out = new FileWriter("output-files/" + gameId + ".txt");
-            out.write("{\"actions\":[\n");
 
             ExecutorService es = Executors.newCachedThreadPool();
             while (true) {
@@ -65,35 +65,48 @@ public class StatsCollector implements Runnable{
                     String message = "{\"actions\":[";
                     
                     for (int i = 0; i < actions.length(); i++) {
-                        if (uniques.add(actions.getJSONObject(i).get("possession").toString() + actions.getJSONObject(i).get("actionNumber").toString())) {    
-                            //Gives all the next actions
-                            out.write(actions.get(i).toString() + ",");
+                        String key = actions.getJSONObject(i).get("possession").toString() + actions.getJSONObject(i).get("actionNumber").toString() + actions.getJSONObject(i).get("actionType");
+                        if (!uniques.containsKey(key)) {
+                            uniques.put(key, actions.get(i).toString());
                             message += actions.get(i).toString() + ",";
                             //System.out.println(actions.get(i).toString());
+                        } else if (actions.getJSONObject(i).get("actionType").toString().contains("pt")) {
+                            if (!actions.getJSONObject(i).get("shotResult").toString().equals(new JSONObject(uniques.get(key)).get("shotResult").toString()) || 
+                                !actions.getJSONObject(i).get("actionType").toString().equals(new JSONObject(uniques.get(key)).get("actionType").toString())) {
+                                System.out.println(actions.getJSONObject(i).get("shotResult").toString() + " | " + new JSONObject(uniques.get(key)).get("shotResult").toString());
+                                JSONObject badStatMessage = new JSONObject(uniques.get(key));
+                                Thread t = new Thread(new StatCorrector(badStatMessage, gameId));
+                                t.start();
+                                t.join();
+                                uniques.remove(key);
+                                uniques.put(key, actions.get(i).toString());
+                            }
                         }
                     }
 
-                    message = message.substring(0, message.length()-1);
-                    message += "]}";
-                    Runnable r = new StatsProcessor(gameId, message);
-                    es.execute(r);
+                    if (message != "{\"actions\":[") {
+                        message = message.substring(0, message.length()-1);
+                        message += "]}";
+                        Runnable r = new StatsProcessor(gameId, message);
+                        es.execute(r);
 
 
-                    if ((actions.getJSONObject(actions.length()-1)).get("description").toString().equals("Game End")) {
-                        FileWriter finalOut = new FileWriter("output-files/" + gameId + "_final.txt");
-                        finalOut.write(sb.toString());
-                        finalOut.close();
-                        break;
-                    } else if (actions.getJSONObject(actions.length()-1).get("actionType").toString().equals("period")) {
-                        if (actions.getJSONObject(actions.length()-1).get("subType").toString().equals("end")) {
-                            if (Integer.parseInt(actions.getJSONObject(actions.length()-1).get("period").toString()) >= 4) {
-                                int homeScore = Integer.parseInt(actions.getJSONObject(actions.length()-1).get("scoreHome").toString());
-                                int awayScore = Integer.parseInt(actions.getJSONObject(actions.length()-1).get("scoreAway").toString());
-                                if (homeScore != awayScore) {
-                                    FileWriter finalOut = new FileWriter("output-files/" + gameId + "_final.txt");
-                                    finalOut.write(sb.toString());
-                                    finalOut.close();
-                                    break;
+                        if ((actions.getJSONObject(actions.length()-1)).get("description").toString().equals("Game End")) {
+                            FileWriter finalOut = new FileWriter("output-files/" + gameId + "_rest.txt");
+                            finalOut.write(sb.toString());
+                            finalOut.close();
+                            break;
+                        } else if (actions.getJSONObject(actions.length()-1).get("actionType").toString().equals("period")) {
+                            if (actions.getJSONObject(actions.length()-1).get("subType").toString().equals("end")) {
+                                if (Integer.parseInt(actions.getJSONObject(actions.length()-1).get("period").toString()) >= 4) {
+                                    int homeScore = Integer.parseInt(actions.getJSONObject(actions.length()-1).get("scoreHome").toString());
+                                    int awayScore = Integer.parseInt(actions.getJSONObject(actions.length()-1).get("scoreAway").toString());
+                                    if (homeScore != awayScore) {
+                                        FileWriter finalOut = new FileWriter("output-files/" + gameId + "_final.txt");
+                                        finalOut.write(sb.toString());
+                                        finalOut.close();
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -116,7 +129,17 @@ public class StatsCollector implements Runnable{
             es.shutdown();
             es.awaitTermination(5, TimeUnit.MINUTES);
 
-            out.write("]");
+            StringBuilder outBuilder = new StringBuilder();
+            outBuilder.append("{\"actions\": [");
+
+            for (String k : uniques.keySet()) {
+                outBuilder.append(uniques.get(k) + ",\n");
+            }
+
+            outBuilder.deleteCharAt(outBuilder.length() - 1);
+            outBuilder.append("]}");
+
+            out.write(outBuilder.toString());
             out.close();
             System.out.println("Game " + gameId + " has concluded");
 
@@ -255,7 +278,7 @@ public class StatsCollector implements Runnable{
                     
                     if (actions.length() > index) {
                         for (int i = index; i < actions.length(); i++) {
-                            if (uniques.add(actions.get(i))) {    
+                            if (uniques.put(actions.get(i).toString(), actions.get(i).toString()) != null) {    
                                 //Gives all the next actions
                                 out.write(actions.get(i).toString() + ",");
                                 message += actions.get(i).toString() + ",";

@@ -21,21 +21,21 @@ public class ImportantStatChecker {
 
     public static void CheckRebounds(String pid,String gameId, int rebounds) {
         if (rebounds >= 15) {
-            System.out.println(pid + " has " + rebounds + " assists!");
+            System.out.println(pid + " has " + rebounds + " rebounds!");
             //Send notification
         }
     }
 
     public static void CheckSteals(String pid, String gameId, int steals) {
         if (steals >= 5) {
-            System.out.println(pid + " has " + steals + " assists!");
+            System.out.println(pid + " has " + steals + " steals!");
             //Send notification
         }
     }
 
     public static void CheckBlocks(String pid, String gameId, int blocks) {
         if (blocks >= 5) {
-            System.out.println(pid + " has " + blocks + " assists!");
+            System.out.println(pid + " has " + blocks + " blocks!");
             //Send notification 
         }
     }

@@ -17,11 +17,9 @@ import org.json.JSONArray;
 public class SetPlayerGames implements Runnable{
 
     private String gameId;
-    private String date;
 
     SetPlayerGames(String gameId) {
         this.gameId = gameId;
-        this.date = DateTimeFormatter.ofPattern("yyyy-MM-DD").format(LocalDateTime.now()).toString();
     }
 
     public void run() {
@@ -49,8 +47,9 @@ public class SetPlayerGames implements Runnable{
                 String connectionString = env.get("DBSTRING");
                 Connection conn = DriverManager.getConnection(connectionString);
                 PreparedStatement gameStatement = conn.prepareStatement("INSERT INTO nbastats.games (game_id, game_date, home_team_id, away_team_id) VALUES (?, ?, ?, ?);");
+                //System.out.println(java.time.LocalDate.now().toString());
                 gameStatement.setString(1, gameId);
-                gameStatement.setString(2, date);
+                gameStatement.setString(2, java.time.LocalDate.now().toString()); 
                 gameStatement.setString(3, homeId);
                 gameStatement.setString(4, awayId);
                 gameStatement.executeUpdate();
@@ -132,7 +131,7 @@ public class SetPlayerGames implements Runnable{
 
                 PreparedStatement statement = conn.prepareStatement("INSERT INTO nbastats.games (game_id, game_date, home_team_id, away_team_id) VALUES (?, ?, ?, ?);");
                 statement.setString(1, gameId);
-                statement.setString(2, date);
+                statement.setString(2, java.time.LocalDate.now().toString());
                 statement.setString(3, homeId);
                 statement.setString(4, awayId);
                 statement.executeUpdate();
